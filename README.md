@@ -3,7 +3,7 @@ Mysql driven INDI weather driver
 
 DEPENDENCIES:
 
-- sudo apt install build-essential devscripts debhelper fakeroot cdbs software-properties-common cmake pkg-config 
+- sudo apt install build-essential devscripts debhelper fakeroot cdbs software-properties-common cmake pkg-config libmysqlclient-dev
 - sudo add-apt-repository ppa:mutlaqja/ppa 
 - sudo apt install libindi-dev libnova-dev libz-dev libgsl-dev
 
