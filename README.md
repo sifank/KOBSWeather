@@ -7,7 +7,7 @@ DEPENDENCIES:
 - sudo add-apt-repository ppa:mutlaqja/ppa 
 - sudo apt install libindi-dev libnova-dev libz-dev libgsl-dev
 
-ISSUE:
+ISSUES:
 - Latest INDI release has an orphaned link:  /usr/lib/libindidriver.so points to nowhere!
   - To fis: remove it, use 'locate libindidriver.so' to find the most recent version and create a link to it.
   - Example: 
@@ -16,14 +16,14 @@ ISSUE:
 
 CONTENTS:
 
-- INDI driver and xml files
+- INDI driver and xml files plus python script
 
 INSTALLING:
 
-In a work directory of your choosing on the RPI or (linux) system
+In a work directory of your choosing
 
 - git clone https://github.com/sifank/KOBSWeather.git
-- cd [install_path/]KOBSweather
+- cd [install_path/]KOBSWeather
 - mkdir build; cd build
 - cmake ../
 - make clean; make
