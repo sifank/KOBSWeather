@@ -13,8 +13,7 @@ ISSUES:
   - Example: 
     - locate libindidriver.so 
     - sudo rm /usr/lib/libindidriver.so
-    - sudo ln -s /usr/lib/x86_64-linux-gnu/libindidriver.so.1.9.0   /usr/lib/libindidriver.so
-    - NOTE:  replace the *1.9.0 with what you find from the locate command
+    - sudo ln -s /usr/lib/x86_64-linux-gnu/libindidriver.so   /usr/lib/libindidriver.so
 
 CONTENTS:
 
