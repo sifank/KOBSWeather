@@ -1,3 +1,0 @@
-/usr/bin/indi_KOBSweather
-/usr/share/indi/indi_KOBSweather.xml
-/usr/share/indi/scripts/KOBSweather.py
