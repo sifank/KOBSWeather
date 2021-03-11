@@ -1,0 +1,7 @@
+/home/sifan/INDI/KOBSWeather/build/CMakeFiles/install/strip.dir
+/home/sifan/INDI/KOBSWeather/build/CMakeFiles/edit_cache.dir
+/home/sifan/INDI/KOBSWeather/build/CMakeFiles/indi_KOBSweather.dir
+/home/sifan/INDI/KOBSWeather/build/CMakeFiles/rebuild_cache.dir
+/home/sifan/INDI/KOBSWeather/build/CMakeFiles/list_install_components.dir
+/home/sifan/INDI/KOBSWeather/build/CMakeFiles/install/local.dir
+/home/sifan/INDI/KOBSWeather/build/CMakeFiles/install.dir
