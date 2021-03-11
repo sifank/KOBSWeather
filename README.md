@@ -9,7 +9,7 @@ DEPENDENCIES:
 
 ISSUES:
 - Latest INDI release has an orphaned link:  /usr/lib/libindidriver.so points to nowhere!
-  - To fis: remove it, use 'locate libindidriver.so' to find the most recent version and create a link to it.
+  - To fix: remove it, use 'locate libindidriver.so' to find the most recent version and create a link to it.
   - Example: 
     - locate libindidriver.so 
     - sudo rm /usr/lib/libindidriver.so
