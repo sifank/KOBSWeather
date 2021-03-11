@@ -7,6 +7,10 @@ include(GNUInstallDirs)
 # add our cmake_modules folder
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules/")
 
+if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+  set(CMAKE_INSTALL_PREFIX "/usr" CACHE PATH "..." FORCE)
+endif()
+
 # find our required packages
 find_package(INDI REQUIRED)
 find_package(Nova REQUIRED)
@@ -15,7 +19,7 @@ find_package(GSL REQUIRED)
 
 # these will be used to set the version number in config.h and our driver's xml file
 set(KW_VERSION_MAJOR 1)
-set(KW_VERSION_MINOR 1)
+set(KW_VERSION_MINOR 2)
 
 # do the replacement in the config.h
 configure_file(
@@ -61,6 +65,12 @@ install(
     FILES
     ${CMAKE_CURRENT_BINARY_DIR}/indi_KOBSweather.xml
     DESTINATION ${INDI_DATA_DIR}
+    )
+    
+install (
+    PROGRAMS
+    ${CMAKE_CURRENT_SOURCE_DIR}/KOBSweather.py
+    DESTINATION ${INDI_DATA_DIR}/scripts
 )
 
 

@@ -10,6 +10,7 @@
   INDI Weather Underground (TM) Weather Driver
 
   Modified for OpenWeatherMap API by Jarno Paananen
+  Modified for KOBSweather by Sifan Kahale
   
   This program is free software; you can redistribute it and/or modify it
   under the terms of the GNU General Public License as published by the Free
@@ -37,18 +38,18 @@
 #include <cstring>
 #include <string>
 #include <unistd.h>
-#include <mysql/mysql.h>
 #include <sys/wait.h>
 #include "indiweather.h"
+#include <stdint.h>
 #include "config.h"
 
 using namespace std;
 
-class OpenWeatherMap : public INDI::Weather
+class KOBSweather : public INDI::Weather
 {
   public:
-    OpenWeatherMap();
-    virtual ~OpenWeatherMap();
+    KOBSweather();
+    virtual ~KOBSweather();
 
     //  Generic indi device entries
     bool Connect() override;
@@ -56,6 +57,7 @@ class OpenWeatherMap : public INDI::Weather
     const char *getDefaultName() override;
 
     virtual bool initProperties() override;
+    virtual bool updateProperties() override;
     virtual void ISGetProperties(const char *dev) override;
     virtual bool ISNewText(const char *dev, const char *name, char *texts[], char *names[], int n) override;
 
@@ -64,70 +66,15 @@ class OpenWeatherMap : public INDI::Weather
     virtual bool saveConfigItems(FILE *fp) override;
 
   private:
-    //mysql db fields
-    enum {
-        time,
-        roofTemp,
-        roofHum,
-        roofDp,
-        roofPres,
-        ambwindspd,
-        ambwinddeg,
-        ambwindGust,
-        ambRain,
-        ambPressure,
-        ambTemp,
-        ambHum,
-        ambDp,
-        ambOTAd,
-        ambOBSd,
-        ambCrd,
-        skyTemp,
-        OTAtemp,
-        OTAhum,
-        OTAdp,
-        ambOBSt,
-        ambOBSh,
-        ambOTAt,
-        ambOTAh,
-        DOMtemp,
-        DOMhum,
-        DOMdp,
-        DOMpres,
-        OTA1temp,
-        OTA1hum,
-        OTA1dp,
-        OTAskyTemp,
-        OTA1skyTemp,
-        pme10,
-        pme25,
-        pme100,
-        pm3,
-        pm5,
-        pm10,
-        pm25,
-        pm50,
-        pm100,
-        isRain,
-        lux,
-        OTApres,
-        OTA1pres,
-    };
-
-    enum {
-        Host,
-        User,
-        Pwd,
-        DataBase,
-        Mysql_N,
-    };
-      
-    IText MysqlT[Mysql_N];
-    ITextVectorProperty MysqlTP;
+    IText ScriptsT[1] {};
+    ITextVectorProperty ScriptsTP;
     
     bool getDeviceInfo();
-    double owmLat, owmLong;
-    bool LastParseSuccess = false;
-    int Raining;
+    bool LastParseSuccess = true;
+    char buf[BUFSIZ];
+    size_t byte_count;
+    int rc;
+    
+    float roofTemp, roofHum, roofDp, ambPressure, ambwindspd, ambwindGust, ambRain, Raining, skyTemp, lux;
 };
 

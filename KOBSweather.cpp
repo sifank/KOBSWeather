@@ -9,6 +9,7 @@
   INDI Weather Underground (TM) Weather Driver
 
   Modified for OpenWeatherMap API by Jarno Paananen
+  Modified for KOBSweather by Sifan Kahale
 
   This program is free software; you can redistribute it and/or modify it
   under the terms of the GNU General Public License as published by the Free
@@ -35,14 +36,14 @@
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 #pragma GCC diagnostic ignored "-Wformat-truncation="
 
-// We declare an auto pointer to OpenWeatherMap.
-std::unique_ptr<OpenWeatherMap> openWeatherMap(new OpenWeatherMap());
+// We declare an auto pointer to KOBSweather.
+std::unique_ptr<KOBSweather> openWeatherMap(new KOBSweather());
 
-static size_t WriteCallback(void *contents, size_t size, size_t nmemb, void *userp)
-{
-    ((std::string *)userp)->append((char *)contents, size * nmemb);
-    return size * nmemb;
-}
+//static size_t WriteCallback(void *contents, size_t size, size_t nmemb, void *userp)
+//{
+    //((std::string *)userp)->append((char *)contents, size * nmemb);
+    //return size * nmemb;
+//}
 
 void ISGetProperties(const char *dev)
 {
@@ -82,38 +83,35 @@ void ISSnoopDevice(XMLEle *root)
 }
 
 /***********************************************************************/
-OpenWeatherMap::OpenWeatherMap()
+KOBSweather::KOBSweather()
 {
     setVersion(KW_VERSION_MAJOR, KW_VERSION_MINOR);
-
-    owmLat  = -1000;
-    owmLong = -1000;
 
     setWeatherConnection(CONNECTION_NONE);
 }
 
 /***********************************************************************/
-OpenWeatherMap::~OpenWeatherMap() {}
+KOBSweather::~KOBSweather() {}
 
-const char *OpenWeatherMap::getDefaultName()
+const char *KOBSweather::getDefaultName()
 {
     return (const char *)"KOBS Weather";
 }
 
 /***********************************************************************/
-bool OpenWeatherMap::Connect()
+bool KOBSweather::Connect()
 {
 
     return true;
 }
 
-bool OpenWeatherMap::Disconnect()
+bool KOBSweather::Disconnect()
 {
     return true;
 }
 
 /***********************************************************************/
-bool OpenWeatherMap::initProperties()
+bool KOBSweather::initProperties()
 {
     INDI::Weather::initProperties();
 
@@ -125,7 +123,7 @@ bool OpenWeatherMap::initProperties()
     addParameter("WEATHER_WIND_SPEED", "Wind (mph)", 0, 6, 1);
     addParameter("WEATHER_WIND_GUST", "Gust (mph)", 0, 10, 1);
     addParameter("WEATHER_RAIN_HOUR", "Daily Rain (in)", 0, 0, 1);
-    addParameter("WEATHER_IS_RAIN", "Raining", 0, 1, 1);
+    addParameter("WEATHER_IS_RAIN", "Raining (1=yes)", 0, 1, 0);
     addParameter("WEATHER_SKY_TEMP", "Sky Temp (c)", -40, -10, 1);
     addParameter("WEATHER_LUX", "Sky LUX (lux*10K)", 0, 1, 1);
     
@@ -135,48 +133,63 @@ bool OpenWeatherMap::initProperties()
     setCriticalParameter("WEATHER_SKY_TEMP");
     setCriticalParameter("WEATHER_HUMIDITY");
     
-    IUFillText(&MysqlT[Host], "MYSQL_HOST", "Mysql Hostname", "Please Set");
-    IUFillText(&MysqlT[User], "MYSQL_User", "Mysql Username", "Please Set");
-    IUFillText(&MysqlT[Pwd], "MYSQL_Pwd", "Mysql Password", "Please Set");
-    IUFillText(&MysqlT[DataBase], "MYSQL_DB", "Mysql Database", "Please Set");
-    IUFillTextVector(&MysqlTP, MysqlT, Mysql_N, getDeviceName(), "MYSQL", "Script", OPTIONS_TAB, IP_RW, 60, IPS_IDLE);
-
-    defineText(&MysqlTP);
-    
+    IUFillText(&ScriptsT[0], "WEATHER_SCRIPT_NAME", "Weather Script", "KOBSweather.py");
+    IUFillTextVector(&ScriptsTP, ScriptsT, 1, getDeviceName(), "WEATHER_SCRIPT", "Script", OPTIONS_TAB, IP_RW, 100, IPS_IDLE);
     addDebugControl();
 
     return true;
 }
 
+/*****************************************************************************************/
+bool KOBSweather::updateProperties()
+{
+    INDI::Weather::updateProperties();
+
+    if (isConnected())
+    {
+        defineText(&ScriptsTP);
+        updateWeather();
+    }
+    else
+    {
+        deleteProperty(ScriptsTP.name);
+    }
+
+    return true;
+}
+
+
 /***********************************************************************/
-void OpenWeatherMap::ISGetProperties(const char *dev)
+void KOBSweather::ISGetProperties(const char *dev)
 {
     INDI::Weather::ISGetProperties(dev);
-
-    loadConfig(true, MysqlTP.name);
+    loadConfig(true, ScriptsTP.name);
 }
 
 /***********************************************************************/
-bool OpenWeatherMap::saveConfigItems(FILE *fp)
+bool KOBSweather::saveConfigItems(FILE *fp)
 {
     INDI::Weather::saveConfigItems(fp);
-
-    IUSaveConfigText(fp, &MysqlTP);
+    IUSaveConfigText(fp, &ScriptsTP);
 
     return true;
 }
 
 /***********************************************************************/
-bool OpenWeatherMap::ISNewText(const char *dev, const char *name, char *texts[], char *names[], int n)
+bool KOBSweather::ISNewText(const char *dev, const char *name, char *texts[], char *names[], int n)
 {
     if (dev != nullptr && strcmp(dev, getDeviceName()) == 0)
     {
-        if (strcmp(name, MysqlTP.name) == 0)
+        if (strcmp(name, ScriptsTP.name) == 0)
         {
-            MysqlTP.s = IPS_OK;
-            IUUpdateText(&MysqlTP, texts, names, n);
+            ScriptsTP.s = IPS_OK;
+            IUUpdateText(&ScriptsTP, texts, names, n);
+            
+            // this was set if there was an error, reset it when the script name has changed so we can try it again
+            LastParseSuccess = true;
+            
             // update client display
-            IDSetText(&MysqlTP, nullptr);
+            IDSetText(&ScriptsTP, nullptr);
             return true;
         }
 
@@ -186,55 +199,63 @@ bool OpenWeatherMap::ISNewText(const char *dev, const char *name, char *texts[],
 }
 
 /***********************************************************************/
-IPState OpenWeatherMap::updateWeather()
+IPState KOBSweather::updateWeather()
 {
-    // MYSQL connection
-    static unsigned int opt_port_num = 3306; /* PORT */
-    static char *opt_socket_name = NULL; /* SOCKET NAME, DO NOT CHANGE */
-    static unsigned int opt_flags = 0; /* CONNECTION FLAGS, DO NOT CHANGE */
-    
-    MYSQL *conn; /* pointer to connection handler */
-    MYSQL_RES *res; /* holds the result set */
-    MYSQL_ROW row;
-    conn = mysql_init (NULL);
-    
-    /* THIS CONNECTS TO SERVER, DO NOT CHANGE ANYTHING HERE */
-    //mysql_real_connect (conn, opt_host_name, opt_user_name, opt_password,
-    //opt_db_name, opt_port_num, opt_socket_name, opt_flags);
-    mysql_real_connect (conn, MysqlT[Host].text, MysqlT[User].text, MysqlT[Pwd].text, MysqlT[DataBase].text, opt_port_num, opt_socket_name, opt_flags);
-    
-    /* show tables in the database (test for errors also) */
-    mysql_query(conn, "SELECT * FROM sensordata ORDER BY time DESC LIMIT 1");
-    res = mysql_store_result(conn);
-    
-    // get the number of the columns
-    int num_fields = mysql_num_fields(res);
-    
-    row = mysql_fetch_row(res);
-    
-    setParameterValue("WEATHER_TEMPERATURE", stof(row[roofTemp]));
-    setParameterValue("WEATHER_HUMIDITY", stof(row[roofHum]));
-    setParameterValue("WEATHER_DEW_POINT", stof(row[roofDp]));
-    setParameterValue("WEATHER_DP_DEP", stof(row[roofTemp]) - stof(row[roofDp]));
-    setParameterValue("WEATHER_PRESSURE", stof(row[ambPressure]));
-    setParameterValue("WEATHER_WIND_SPEED", stof(row[ambwindspd]));
-    setParameterValue("WEATHER_WIND_GUST", stof(row[ambwindGust]));
-    setParameterValue("WEATHER_RAIN_HOUR", stof(row[ambRain]));
-    if (row[isRain] == "y")
-        Raining = 1;
-    else
-        Raining = 0;
-    setParameterValue("WEATHER_IS_RAIN", Raining);
-    setParameterValue("WEATHER_SKY_TEMP", stof(row[skyTemp]));
-    setParameterValue("WEATHER_LUX", stof(row[lux]) * 10000);
-    
-    if(res != NULL)
-       mysql_free_result(res);
+    // if LastParseSucess was false, means we had error with script, no need repeating this
+    if(LastParseSuccess) {
+        
+        char cmd[51];
+        snprintf(cmd, 50, "/usr/share/indi/scripts/%s", ScriptsT[0].text);
+        
+        if (access(cmd, F_OK|X_OK) == -1) {
+            LOGF_ERROR("Cannot use script [%s], check its existence and permissions", cmd);
+            LastParseSuccess = false;
+            return IPS_ALERT;
+        }
 
-    /* disconnect from server */
-    mysql_close (conn);
-
-    return IPS_OK;
+        LOGF_DEBUG("Run script: %s", cmd);
+        FILE *handle = popen(cmd, "r");
+        if (handle == nullptr) {
+            LOGF_ERROR("Failed to run script [%s]", strerror(errno));
+            LastParseSuccess = false;
+            return IPS_ALERT;
+        }
+        
+        byte_count = fread(buf, 1, BUFSIZ - 1, handle);
+        fclose(handle);
+        buf[byte_count] = 0;
+        if (byte_count == 0) {
+            LOGF_ERROR("Got no output from script [%s]", cmd);
+            LastParseSuccess = false;
+            return IPS_ALERT;
+        }
+    
+        LOGF_DEBUG("Read %d bytes output [%s]", byte_count, buf);
+    
+        rc = sscanf(buf, "%f,%f,%f,%f,%f,%f,%f,%f,%f,%f", &roofTemp, &roofHum, &roofDp, &ambPressure, &ambwindspd, &ambwindGust, &ambRain, &Raining, &skyTemp, &lux);
+    
+        if (rc < 1)  {
+            LOGF_ERROR("Failed to parse input %s", buf);
+            LastParseSuccess = false;
+            return IPS_ALERT;
+        }
+    
+        setParameterValue("WEATHER_TEMPERATURE", roofTemp);
+        setParameterValue("WEATHER_HUMIDITY", roofHum);
+        setParameterValue("WEATHER_DEW_POINT", roofDp);
+        setParameterValue("WEATHER_DP_DEP", roofTemp - roofDp);
+        setParameterValue("WEATHER_PRESSURE", ambPressure);
+        setParameterValue("WEATHER_WIND_SPEED", ambwindspd);
+        setParameterValue("WEATHER_WIND_GUST", ambwindGust);
+        setParameterValue("WEATHER_RAIN_HOUR", ambRain);
+        setParameterValue("WEATHER_IS_RAIN", Raining);
+        setParameterValue("WEATHER_SKY_TEMP", skyTemp);
+        setParameterValue("WEATHER_LUX", lux * 10000);
+    
+        return IPS_OK;
+    }
+    
+    return IPS_ALERT;
 }
 
 

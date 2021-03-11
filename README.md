@@ -15,8 +15,16 @@ INSTALLING:
 
 In a work directory of your choosing on the RPI or (linux) system
 
-- git clone https://github.com/sifank/KOBSWeather.git
-- cd [install_path/]KOBSWeather
+git clone https://github.com/sifank/KOBSweather.git
+
+Binary files for the Raspberry Pi are included:
+
+- cd [install path/]PowerStar
+- sudo make install
+
+To compile from scratch:
+
+- cd [install_path/]KOBSweather
 - mkdir build; cd build
 - cmake ../
 - make clean; make
