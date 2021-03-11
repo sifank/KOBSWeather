@@ -11,8 +11,10 @@ ISSUES:
 - Latest INDI release has an orphaned link:  /usr/lib/libindidriver.so points to nowhere!
   - To fis: remove it, use 'locate libindidriver.so' to find the most recent version and create a link to it.
   - Example: 
+    - locate libindidriver.so 
     - sudo rm /usr/lib/libindidriver.so
-    - sudo ln -s /usr/lib/x86_64-linux-gnu/libindidriver.so.1.8.9   /usr/lib/libindidriver.so
+    - sudo ln -s /usr/lib/x86_64-linux-gnu/libindidriver.so.1.9.0   /usr/lib/libindidriver.so
+    - NOTE:  replace the *1.9.0 with what you find from the locate command
 
 CONTENTS:
 
