@@ -109,6 +109,11 @@ bool KOBSweather::initProperties()
 {
     INDI::Weather::initProperties();
 
+    IUFillText(&EphemT[0], "CURRSUN", "Sun Eph", "");
+    IUFillText(&EphemT[1], "CURRMOON", "Moon Eph", "");
+    IUFillText(&EphemT[2], "CURRCOND", "Current Conditions", "");
+    IUFillTextVector(&EphemTP, EphemT, 3, getDeviceName(), "Conditions", "Conditions", MAIN_CONTROL_TAB, IP_RO, 0, IPS_OK);
+    
     addParameter("WEATHER_TEMPERATURE", "Temperature (F)", 20, 80, 1);
     addParameter("WEATHER_HUMIDITY", "Humidity (%)", 0, 95, 1);
     addParameter("WEATHER_DEW_POINT", "Dew Point (F)", 0, 100, 0);
@@ -127,8 +132,9 @@ bool KOBSweather::initProperties()
     setCriticalParameter("WEATHER_SKY_TEMP");
     setCriticalParameter("WEATHER_HUMIDITY");
     
-    IUFillText(&ScriptsT[0], "WEATHER_SCRIPT_NAME", "Weather Script", "KOBSweather.py");
-    IUFillTextVector(&ScriptsTP, ScriptsT, 1, getDeviceName(), "WEATHER_SCRIPT", "Script", OPTIONS_TAB, IP_RW, 100, IPS_IDLE);
+    IUFillText(&ScriptsT[EphemScript], "EPHEMERIS_SCRIPT_NAME", "Ephemeris Script", "KOBSephemeris.py");
+    IUFillText(&ScriptsT[CurWeather], "WEATHER_SCRIPT_NAME", "Weather Script", "KOBSweather.py");
+    IUFillTextVector(&ScriptsTP, ScriptsT, Script_N, getDeviceName(), "SCRIPTS", "Scripts", OPTIONS_TAB, IP_RW, 100, IPS_IDLE);
     addDebugControl();
 
     return true;
@@ -142,11 +148,13 @@ bool KOBSweather::updateProperties()
     if (isConnected())
     {
         defineText(&ScriptsTP);
+        defineText(&EphemTP);
         updateWeather();
     }
     else
     {
         deleteProperty(ScriptsTP.name);
+        deleteProperty(EphemTP.name);
     }
 
     return true;
@@ -199,7 +207,7 @@ IPState KOBSweather::updateWeather()
     if(LastParseSuccess) {
         
         char cmd[51];
-        snprintf(cmd, 50, "/usr/share/indi/scripts/%s", ScriptsT[0].text);
+        snprintf(cmd, 50, "/usr/share/indi/scripts/%s", ScriptsT[CurWeather].text);
         
         if (access(cmd, F_OK|X_OK) == -1) {
             LOGF_ERROR("Cannot use script [%s], check its existence and permissions", cmd);
@@ -245,11 +253,76 @@ IPState KOBSweather::updateWeather()
         setParameterValue("WEATHER_IS_RAIN", Raining);
         setParameterValue("WEATHER_SKY_TEMP", skyTemp);
         setParameterValue("WEATHER_LUX", lux * 10000);
-    
+        
+        // Fill in current weather string for copy/paste
+        time_t ts = std::time(0);
+        std::tm* now = std::localtime(&ts);
+        sprintf(CurrentCond, "[Time: %02i:%02i] Temp: %.1f Hum: %.1f DpDep %.1f Gust %.1f SkyTemp %.1f LUX %.1f", now->tm_hour, now->tm_min, roofTemp, roofHum, roofTemp - roofDp, ambwindGust, skyTemp, lux);
+        EphemT[current].text = CurrentCond;
+        
+        // Read in current sun/moon ephemeris - just once 
+        if (!EphemSet) {
+            KOBSweather::getEphemeris();
+            EphemSet = true;
+        }
+        
         return IPS_OK;
     }
     
     return IPS_ALERT;
 }
 
+/***********************************************************************/
+bool KOBSweather::getEphemeris()
+{
+    if(LastParseSuccess2) {
+        
+        char cmd[51];
+        snprintf(cmd, 50, "/usr/share/indi/scripts/%s", ScriptsT[EphemScript].text);
+        
+        if (access(cmd, F_OK|X_OK) == -1) {
+            LOGF_ERROR("Cannot use script [%s], check its existence and permissions", cmd);
+            LastParseSuccess2 = false;
+            return false;
+        }
+
+        LOGF_DEBUG("Run script: %s", cmd);
+        FILE *handle = popen(cmd, "r");
+        if (handle == nullptr) {
+            LOGF_ERROR("Failed to run script [%s]", strerror(errno));
+            LastParseSuccess2 = false;
+            return false;
+        }
+        
+        byte_count = fread(buf, 1, BUFSIZ - 1, handle);
+        fclose(handle);
+        buf[byte_count] = 0;
+        if (byte_count == 0) {
+            LOGF_ERROR("Got no output from script [%s]", cmd);
+            LastParseSuccess2 = false;
+            return false;
+        }
+    
+        LOGF_DEBUG("Read %d bytes output [%s]", byte_count, buf);
+        
+        stringstream iss(buf);
+        
+        string SunEphem;
+        getline(iss, SunEphem, '\n');
+        LOGF_DEBUG("SunEphem: %s", SunEphem.c_str());
+        char *SUN = new char[SunEphem.size()+1];
+        strcpy(SUN, SunEphem.c_str());
+        EphemT[sun].text = SUN;
+            
+        string MoonEphem;
+        getline(iss, MoonEphem, '\n');
+        LOGF_DEBUG("Line: %s", MoonEphem.c_str());
+        char *MOON = new char[MoonEphem.size()+1];
+        strcpy(MOON, MoonEphem.c_str());
+        
+        EphemT[moon].text = MOON;
+    }
+    
+    return true;
+}
 

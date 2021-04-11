@@ -94,7 +94,7 @@ OTA1skyTemp,
     else:
         Raining = 0
         
-    print("%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n" % (roofTemp, roofHum, roofDp, ambPressure, ambwindspd, ambwindGust, ambRain, Raining, skyTemp, lux))
+    print("%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n" % (OTA1temp, OTA1hum, OTA1dp, ambPressure, ambwindspd, ambwindGust, ambRain, Raining, OTA1skyTemp, lux))
     
 cursor.close()
 

@@ -19,7 +19,7 @@ find_package(GSL REQUIRED)
 
 # these will be used to set the version number in config.h and our driver's xml file
 set(KW_VERSION_MAJOR 1)
-set(KW_VERSION_MINOR 2)
+set(KW_VERSION_MINOR 3)
 
 # do the replacement in the config.h
 configure_file(
@@ -70,6 +70,7 @@ install(
 install (
     PROGRAMS
     ${CMAKE_CURRENT_SOURCE_DIR}/KOBSweather.py
+    ${CMAKE_CURRENT_SOURCE_DIR}/KOBSephemeris.py
     DESTINATION ${INDI_DATA_DIR}/scripts
 )
 

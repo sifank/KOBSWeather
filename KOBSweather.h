@@ -42,6 +42,7 @@
 #include "indiweather.h"
 #include <stdint.h>
 #include "config.h"
+#include <ctime>
 
 using namespace std;
 
@@ -66,12 +67,29 @@ class KOBSweather : public INDI::Weather
     virtual bool saveConfigItems(FILE *fp) override;
 
   private:
-    IText ScriptsT[1] {};
+    enum {
+        EphemScript,
+        CurWeather,
+        Script_N,
+    };
+    IText ScriptsT[Script_N] {};
     ITextVectorProperty ScriptsTP;
     
+    enum {
+        sun,
+        moon,
+        current,
+        Ephem_N,
+    };
+    IText EphemT[Ephem_N] {};
+    ITextVectorProperty EphemTP;
+    
     bool getDeviceInfo();
+    bool getEphemeris();
+    bool EphemSet = false;
     bool LastParseSuccess = true;
-    char buf[BUFSIZ];
+    bool LastParseSuccess2 = true;
+    char buf[BUFSIZ], CurrentCond[BUFSIZ];
     size_t byte_count;
     int rc;
     
