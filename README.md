@@ -6,6 +6,7 @@ DEPENDENCIES:
 - sudo apt install build-essential devscripts debhelper fakeroot cdbs software-properties-common cmake pkg-config libmysqlclient-dev
 - sudo add-apt-repository ppa:mutlaqja/ppa 
 - sudo apt install libindi-dev libnova-dev libz-dev libgsl-dev
+- sudo pip3 install ephem
 
 ISSUES:
 - Latest INDI release has an orphaned link:  /usr/lib/libindidriver.so points to nowhere!
