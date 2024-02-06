@@ -7,7 +7,7 @@
 import sys, os
 import mysql.connector
 
-MYHost = "mingshan"
+MYHost = "kiana"
 MYUser = "sifan"
 MYPwd = "all4Sky"
 MYDb = "kahaleobs"
@@ -36,65 +36,64 @@ except:
 
 # read db and create csv records
 for (time,
-   roofTemp,
-    roofHum,
-     roofDp,
-   roofPres,
- ambwindspd,
- ambwinddeg,
-ambwindGust,
-    ambRain,
-ambPressure,
-    ambTemp,
-     ambHum,
-      ambDp,
-    ambOTAd,
-    ambOBSd,
-     ambCrd,
-    skyTemp,
-    OTAtemp,
-     OTAhum,
-      OTAdp,
-    ambOBSt,
-    ambOBSh,
-    ambOTAt,
-    ambOTAh,
-    DOMtemp,
-     DOMhum,
-      DOMdp,
-    DOMpres,
-   OTA1temp,
-    OTA1hum,
-     OTA1dp,
- OTAskyTemp,
-OTA1skyTemp,
-      pme10,
-      pme25,
-     pme100,
-        pm3,
-        pm5,
-       pm10,
-       pm25,
-       pm50,
-      pm100,
-     isRain,
-        lux,
-    OTApres,
-    OTA1pres) in cursor:
+  otaTemp,
+  otaHum,
+  otaDp,
+  otaPres,
+  otaLux,
+  otaSkyTemp,
+  allskyTemp,
+  allskyHum,
+  allskyDp,
+  allskyPres,
+  allskyLux,
+  allskySkyTemp,
+  allskyWind,
+  allskyWGust,
+  allskyWDir,
+  fallskyTemp,
+  fallskyHum,
+  fallskyDp,
+  fallskyPres,
+  fallskyLux,
+  fallskySkyTemp,
+  fallskyWind,
+  fallskyWGust,
+  fallskyWDir,
+  domeTemp,
+  domeHum,
+  domeDp,
+  domePres,
+  domeIsRain,
+  domePME10,
+  domePME25,
+  domePME100,
+  domePM3,
+  domePM5,
+  domePM10,
+  domePM25,
+  domePM50,
+  domePM100,
+  obsTemp,
+  obsHum,
+  obsDp,
+  obsPres,
+  obsWind,
+  obsWGust,
+  obsWdir,
+  obsIsRain,
+  obsRain,
+  obsRain1Hr,
+  obsRain24Hr,
+  obsLgtng) in cursor:
 
-    # add this row to the DpDep table
-    ambDD = ambTemp - ambDp
-    domeDD = DOMtemp - DOMdp
-    otisDD = OTAtemp - OTAdp
-    taftDD = OTA1temp - OTA1dp
-    
-    # rain comes in as y or n, but needs to be int
-    if (isRain == "y"):
+  # rain comes in as y or n, but needs to be int
+  if (obsIsRain == "y"):
         Raining = 1
-    else:
+  else:
         Raining = 0
         
-    print("%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n" % (OTA1temp, OTA1hum, OTA1dp, ambPressure, ambwindspd, ambwindGust, ambRain, Raining, OTA1skyTemp, lux))
+  print("%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n" % (allskyTemp, allskyHum, allskyDp, allskyPres, allskyWind, allskyWGust, obsRain, Raining, allskySkyTemp, allskyLux))
     
 cursor.close()
 
