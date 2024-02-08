@@ -3,10 +3,8 @@ INDI weather driver - uses a python script to gather parameters
 
 DEPENDENCIES:
 
-- sudo apt install build-essential devscripts debhelper fakeroot cdbs software-properties-common cmake pkg-config libmysqlclient-dev
-- sudo add-apt-repository ppa:mutlaqja/ppa 
-- sudo apt install libindi-dev libnova-dev libz-dev libgsl-dev
-- sudo pip3 install ephem
+- sudo apt install build-essential devscripts debhelper fakeroot cdbs software-properties-common cmake pkg-config libmysqlclient-dev libnova-dev libz-dev libgsl-dev python3-ephem
+- sudo add-apt-repository ppa:mutlaqja/ppa
 
 ISSUES:
 - Latest INDI release has an orphaned link:  /usr/lib/libindidriver.so points to nowhere!
@@ -27,7 +25,7 @@ In a work directory of your choosing
 - git clone https://github.com/sifank/KOBSWeather.git
 - cd [install_path/]KOBSWeather
 - mkdir build; cd build
-- cmake ../
+- cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Debug ../
 - make clean; make
 - sudo make install
 
