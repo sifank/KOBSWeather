@@ -1,22 +1,20 @@
 #!/usr/bin/python3
 # Name:     ephemeris
 # Author:   sifan
-# Version:  20210410
-# Desc:     Calculates and html formats daily positions 
+# Version:  20251128
+# Desc:     Calculates todays ephemeris for the Sun and Moon
 
 import ephem
-from datetime import datetime
-from dateutil import tz
+import datetime
 
-utc = datetime.utcnow()
+utc = datetime.datetime.now(datetime.UTC)
 
 ko = ephem.Observer()
 ko.lon = '-124.040438'
 ko.lat = '44.867813'
 ko.elevation = 16
-ko.epoch = '2021'
+ko.epoch = '2025'
 ko.date = ephem.now()
-
 
 moon = ephem.Moon(ko)
 sun = ephem.Sun(ko)
