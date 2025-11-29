@@ -7,7 +7,7 @@ DEPENDENCIES:
 - sudo add-apt-repository ppa:mutlaqja/ppa
 
 ISSUES:
-- Latest INDI release has an orphaned link:  /usr/lib/libindidriver.so points to nowhere!
+- (might be fixed now) Latest INDI release has an orphaned link:  /usr/lib/libindidriver.so points to nowhere!
   - To fix: remove it, use 'locate libindidriver.so' to find the most recent version and create a link to it.
   - Example: 
     - locate libindidriver.so 
@@ -22,6 +22,8 @@ INSTALLING:
 
 In a work directory of your choosing
 
+- The two KOBSweather(x).py files require python3 ephem module
+  - sudo apt install python3-ephem
 - git clone https://github.com/sifank/KOBSWeather.git
 - cd [install_path/]KOBSWeather
 - mkdir build; cd build
@@ -33,3 +35,9 @@ NOTES:
 - The included python script (KOBSweather.py) gathers parameters from a mysql database and outputs a csv list of values
 - You can modify this to gather the data from your own weather devices
 - If you have different, more or less parameters, you need to modify both the python script and the INDI driver to match
+
+RELEASES:
+- 1.4
+  - Now requires flag for c++17
+  - Split KOBSweather.py into two variants: kobs and field, can be selected in the options tab
+    
